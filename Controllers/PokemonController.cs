@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using PokemonReviewApp.Data;
+using PokemonReviewApp.DTO;
 using PokemonReviewApp.Interface;
 using PokemonReviewApp.Models;
 
@@ -10,33 +12,34 @@ namespace PokemonReviewApp.Controllers
     public class PokemonController : ControllerBase
     {
         private readonly IPokemonRepository _pokemonRepository;
+        private readonly IMapper _mapper;
 
-        public PokemonController(IPokemonRepository pokemonRepository) {
+        public PokemonController(IPokemonRepository pokemonRepository, IMapper mapper) {
             _pokemonRepository = pokemonRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Pokemon>))]
+       
 
         public  ActionResult<Pokemon> GetPokemons()
         {
-            var pokemon = _pokemonRepository.GetPokemons();
+            var pokemons = _mapper.Map<List<PokemonDTO>>(_pokemonRepository.GetPokemons());
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (pokemon == null)
+            if (pokemons == null)
             {
                 return NotFound();
             }
-            return Ok(pokemon);
+            return Ok(pokemons);
         }
 
         [HttpGet("{pokeId}")]
-        [ProducesResponseType(200, Type = typeof(Pokemon))]
-        [ProducesResponseType(400)]
+
         public  IActionResult GetPokemon (int pokeId)
         {
             if(!_pokemonRepository.PokemonExists(pokeId))
@@ -44,7 +47,7 @@ namespace PokemonReviewApp.Controllers
                 return NotFound(ModelState);
 
             }
-                var pokemon = _pokemonRepository.GetPokemon (pokeId);
+                var pokemon = _mapper.Map<PokemonDTO>(_pokemonRepository.GetPokemon (pokeId));
             if (!ModelState.IsValid) {
                 return BadRequest(ModelState);
             }
@@ -53,8 +56,6 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpGet("{pokeId}/rating")]
-        [ProducesResponseType(200, Type = typeof(decimal))]
-        [ProducesResponseType(400)]
         public IActionResult GetPokemonRating(int pokeId)
         {
             if(!_pokemonRepository.PokemonExists(pokeId))
