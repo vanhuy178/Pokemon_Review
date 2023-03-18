@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PokemonReviewApp.Data;
 using PokemonReviewApp.Interface;
 using PokemonReviewApp.Models;
+using System.Linq.Expressions;
 
 namespace PokemonReviewApp.Repository
 {
@@ -18,6 +19,12 @@ namespace PokemonReviewApp.Repository
         public bool CountryExists(int id)
         {
             return _dataContext.Countries.Any(c => c.Id == id); 
+        }
+
+        public bool CreateCountry(Country country)
+        {
+           _dataContext.Add(country);
+            return Save();
         }
 
         public ICollection<Country> GetCountries()
@@ -37,7 +44,13 @@ namespace PokemonReviewApp.Repository
 
         public ICollection<Owner> GetOwnersFromCountry(int countryId)
         {
-            return _dataContext.Owners.Where(c => c.Country.Id == countryId).ToList();
+            return _dataContext.Owners.Where(c => c.Country.Id == countryId).ToList(); 
+        }
+
+        public bool Save()
+        {
+            var saved = _dataContext.SaveChanges(); 
+            return saved > 0? true: false;  
         }
     }
 }   

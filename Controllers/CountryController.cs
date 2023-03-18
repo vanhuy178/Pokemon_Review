@@ -14,7 +14,7 @@ namespace PokemonReviewApp.Controllers
         private readonly IContryRepository _countryRepository;
         private readonly IMapper _mapper;
 
-        public CountryController(IContryRepository countryRepository, IMapper mapper) { 
+        public CountryController(IContryRepository countryRepository ,IMapper mapper) { 
             _countryRepository = countryRepository;
             _mapper = mapper;
         }
@@ -62,6 +62,34 @@ namespace PokemonReviewApp.Controllers
 
             return Ok(country );
         
+        }
+
+        [HttpPost]
+        public  IActionResult PostCountry( [FromBody] CountryDTO countryDTO) {
+            if(countryDTO == null) {
+
+                return BadRequest(ModelState);
+            }
+
+            var country = _countryRepository.GetCountries().Where(e => e.Name.Trim().ToUpper() == countryDTO.Name.Trim().ToUpper()).FirstOrDefault();
+            
+            if(country != null) {
+                ModelState.AddModelError("", "Category already exists");
+                return StatusCode(400, ModelState);
+            } 
+
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);  
+            }
+
+            var countryMap = _mapper.Map<Country>(countryDTO);
+
+            if(!_countryRepository.CreateCountry(countryMap)) {
+                ModelState.AddModelError("", "Something was wrong when saving");
+                return StatusCode(500, ModelState);
+            }
+            return Ok("Successfully created");
         }
     }
 }

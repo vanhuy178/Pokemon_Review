@@ -4,11 +4,13 @@ namespace PokemonReviewApp.Interface
 {
     public interface IContryRepository
     {
-        public ICollection<Country> GetCountries();
+         ICollection<Country> GetCountries();
 
-        public Country GetCountry(int id);  
-        public Country GetCountryByOwner(int ownerId);  
-        public ICollection<Owner> GetOwnersFromCountry(int countryId);
-        public bool CountryExists(int id);  
+         Country GetCountry(int id);  
+         Country GetCountryByOwner(int ownerId);  
+         ICollection<Owner> GetOwnersFromCountry(int countryId);
+         bool CountryExists(int id); 
+         bool CreateCountry(Country country);
+         bool Save();
     }
 }

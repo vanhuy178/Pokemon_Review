@@ -20,7 +20,6 @@ namespace PokemonReviewApp.Controllers
          }
 
         [HttpGet]
-
         public IActionResult GetCategories()
         {
             var categories = _mapper.Map<List<CategoryDTO>>(_categoryRepositoty.GetCategories());
@@ -55,10 +54,16 @@ namespace PokemonReviewApp.Controllers
         [HttpGet("pokemon/{categoryId}")]
 
         public IActionResult GetPokemonByCategoryId(int categoryId) {
-
+            if (!_categoryRepositoty.CategoryExist(categoryId))
+            {
+                return NotFound();
+            }
             var pokemon = _mapper.Map<List<PokemonDTO >>(
                 _categoryRepositoty.GetPokemonByCategories(categoryId));
-
+            if(pokemon == null)
+            {
+                return BadRequest(pokemon);
+            }
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -66,6 +71,35 @@ namespace PokemonReviewApp.Controllers
 
             return Ok(pokemon);
         }
-         
+
+
+        [HttpPost]
+        public IActionResult CreateCategory([FromBody] CategoryDTO categoryDTO) {
+
+            if(categoryDTO == null) {
+                return BadRequest(ModelState);
+            }
+            var category =  _categoryRepositoty.GetCategories().Where(c => c.Name.Trim().ToUpper() == categoryDTO.Name.ToUpper()).FirstOrDefault();  
+
+            if(category != null) {
+
+                ModelState.AddModelError("", "Category already exist");
+                return StatusCode(400, ModelState);
+              };
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // map categorydto ==> category 
+            var categoryMap = _mapper.Map<Category>(categoryDTO);
+
+            if(!_categoryRepositoty.CreateCategory(categoryMap))
+            {
+                ModelState.AddModelError("", "Something was wrong while saving");
+                return StatusCode(500, categoryMap);
+            }
+            return Ok("Create successfully");    
+        }
     }    
 }
