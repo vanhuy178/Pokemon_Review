@@ -22,9 +22,9 @@ namespace PokemonReviewApp.Controllers
 
 
         [HttpGet]
-        public IActionResult GetReviewes()
+        public async Task<ActionResult> GetReviewes()
         {
-            var reviewers = _mapper.Map<List<ReviwersDTO>>(_reviewerRepository.GetReviewers());
+            var reviewers = _mapper.Map<List<ReviwersDTO>>(await _reviewerRepository.GetReviewers());
 
             if (!ModelState.IsValid)
             {
@@ -39,8 +39,8 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpGet("{reviewerId}")]
-        public IActionResult GetReviewer(int reviewerId) {
-            if (!_reviewerRepository.ReviewerExists(reviewerId))
+        public async Task<ActionResult> GetReviewer(int reviewerId) {
+            if (!await _reviewerRepository.ReviewerExists(reviewerId))
             {
                 return NotFound();
             }
@@ -48,19 +48,19 @@ namespace PokemonReviewApp.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var reviewer = _mapper.Map<ReviwersDTO>(_reviewerRepository.GetReviewer(reviewerId));
+            var reviewer = _mapper.Map<ReviwersDTO>(await _reviewerRepository.GetReviewer(reviewerId));
 
             return Ok(reviewer);    
         }
 
         [HttpGet("{reviewerId}/reviews")]
-        public IActionResult GetReviewsByReviewer(int reviewerId)
+        public async Task<ActionResult> GetReviewsByReviewer(int reviewerId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            if (!_reviewerRepository.ReviewerExists(reviewerId))
+            if (!await _reviewerRepository.ReviewerExists(reviewerId))
             {
                 return NotFound();
             }
@@ -77,7 +77,7 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateReviewer([FromBody] ReviwersDTO reviewersCreate) 
+        public async Task<ActionResult> CreateReviewer([FromBody] ReviwersDTO reviewersCreate) 
         {
             try
             {
@@ -85,7 +85,8 @@ namespace PokemonReviewApp.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var reviewes = _reviewerRepository.GetReviewers().Where(p => p.FirstName.Trim().ToUpper() == reviewersCreate.FirstName.Trim().ToUpper()).FirstOrDefault();
+                var value = await _reviewerRepository.GetReviewers();
+                var reviewes = value.Where(p => p.FirstName.Trim().ToUpper() == reviewersCreate.FirstName.Trim().ToUpper()).FirstOrDefault();
                 if (reviewes != null)
                 {
                     ModelState.AddModelError("", "Owner already exist");
@@ -96,7 +97,7 @@ namespace PokemonReviewApp.Controllers
              
 
 
-                if (!_reviewerRepository.CreateReviewer(reviewerMap))
+                if (!await _reviewerRepository.CreateReviewer(reviewerMap))
                 {
 
                     ModelState.AddModelError("", "Something was wrong");
@@ -113,7 +114,7 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpPut("{reviewerId}")]
-        public IActionResult UpdateReviers(int reviewerId, ReviwersDTO reviwersDTO)
+        public async Task<ActionResult> UpdateReviers(int reviewerId, ReviwersDTO reviwersDTO)
         {
             if(reviwersDTO == null)
             {
@@ -126,7 +127,7 @@ namespace PokemonReviewApp.Controllers
 
             var reviewerMap = _mapper.Map<Reviewer>(reviwersDTO);
 
-            if(!_reviewerRepository.UpdateReviewer(reviewerMap))
+            if(!await _reviewerRepository.UpdateReviewer(reviewerMap))
             {
                 ModelState.AddModelError("", "Something was wrong");
                 return StatusCode(500, ModelState);
@@ -136,9 +137,9 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpDelete("{reviewerId}")]
-        public IActionResult DeleteReviewer(int reviewerId )
+        public async Task<ActionResult> DeleteReviewer(int reviewerId )
         {
-            if (!_reviewerRepository.ReviewerExists(reviewerId))
+            if (!await _reviewerRepository.ReviewerExists(reviewerId))
             {
                 return NotFound();
             }
@@ -148,9 +149,9 @@ namespace PokemonReviewApp.Controllers
                 return BadRequest(ModelState);
             }
 
-            var reviewerDelete = _reviewerRepository.GetReviewer(reviewerId);
+            var reviewerDelete = await _reviewerRepository.GetReviewer(reviewerId);
 
-            if (!_reviewerRepository.DeleteReviewer(reviewerDelete))
+            if (!await _reviewerRepository.DeleteReviewer(reviewerDelete))
             {
                 ModelState.AddModelError("", "Something was wrong when deleteing");
             }
