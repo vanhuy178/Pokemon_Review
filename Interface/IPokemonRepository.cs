@@ -4,13 +4,15 @@ namespace PokemonReviewApp.Interface
 {
     public interface IPokemonRepository
     {
-        public ICollection<Pokemon> GetPokemons();
+        Task<ICollection<Pokemon>> GetPokemons();
         
-        Pokemon GetPokemon(int id);
-        Pokemon GetPokemon(string name);
-        decimal GetPokemonRating(int pokemonId);
-        bool PokemonExists(int pokemonId);
-        bool CreatePokemon(int ownerId, int categoryId, Pokemon pokemon);
-        bool Save();
+        Task<Pokemon> GetPokemon(int id);
+        Task<Pokemon> GetPokemon(string name);
+        Task<decimal> GetPokemonRating(int pokemonId);
+        Task<bool> PokemonExists(int pokemonId);
+        Task<bool> UpdatePokemon(Pokemon pokemon);
+        Task<bool> CreatePokemon(int ownerId, int categoryId, Pokemon pokemon);
+        Task<bool> DeletePokemon(Pokemon pokemon);
+        Task<bool> Save();
     }
 }

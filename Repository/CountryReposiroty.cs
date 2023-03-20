@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 
 namespace PokemonReviewApp.Repository
 {
+
     public class CountryReposiroty : IContryRepository
     {
         private readonly DataContext _dataContext;
@@ -16,41 +17,54 @@ namespace PokemonReviewApp.Repository
             _dataContext = dataContext;
             _mapper = mapper;
         }  
-        public bool CountryExists(int id)
+        public async Task<bool> CountryExists(int id)
         {
-            return _dataContext.Countries.Any(c => c.Id == id); 
+            return await _dataContext.Countries.AnyAsync(c => c.Id == id); 
         }
 
-        public bool CreateCountry(Country country)
+        public async Task<bool> CreateCountry(Country country)
         {
-           _dataContext.Add(country);
-            return Save();
+           await _dataContext.AddAsync(country);
+            return await Save();
         }
 
-        public ICollection<Country> GetCountries()
+        public async Task<bool> DeleteCountry(Country country)
         {
-            return _dataContext.Countries.ToList();
+            _dataContext?.Remove(country);
+            return  await Save();  
         }
 
-        public Country GetCountry(int id)
+        public async Task<ICollection<Country>> GetCountries()
         {
-            return _dataContext.Countries.Where(e => e.Id == id).FirstOrDefault();  
+            return await _dataContext.Countries.ToListAsync();
         }
 
-        public Country GetCountryByOwner( int ownerId)
+        public async Task<Country> GetCountry(int id)
         {
-            return _dataContext.Owners.Where(o => o.Id == ownerId).Select(c => c.Country).FirstOrDefault();
+            return await _dataContext.Countries.Where(e => e.Id == id).FirstOrDefaultAsync();  
         }
 
-        public ICollection<Owner> GetOwnersFromCountry(int countryId)
+        public async Task<Country> GetCountryByOwner( int ownerId)
         {
-            return _dataContext.Owners.Where(c => c.Country.Id == countryId).ToList(); 
+            return await _dataContext.Owners.Where(o => o.Id == ownerId).Select(c => c.Country).FirstOrDefaultAsync();
         }
 
-        public bool Save()
+        public async Task<ICollection<Owner>> GetOwnersFromCountry(int countryId)
         {
-            var saved = _dataContext.SaveChanges(); 
+            return await _dataContext.Owners.Where(c => c.Country.Id == countryId).ToListAsync(); 
+        }
+
+        public async Task<bool> Save()
+        {
+            var saved = await _dataContext.SaveChangesAsync(); 
             return saved > 0? true: false;  
+        }
+
+        public async Task<bool> UpdateCountry(Country country)
+        {
+           _dataContext.Update(country);    
+
+            return await Save();  
         }
     }
 }   

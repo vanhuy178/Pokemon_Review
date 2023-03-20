@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PokemonReviewApp.Interface;
 using PokemonReviewApp.DTO;
 using PokemonReviewApp.Models;
+using PokemonReviewApp.Repository;
 
 namespace PokemonReviewApp.Controllers
 {
@@ -21,9 +22,9 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetOWners() 
+        public async Task<ActionResult> GetOWners() 
         {
-            var owners = _mapper.Map<List<OwnerDTO>>(_ownerRepository.GetOwners());
+            var owners = _mapper.Map<List<OwnerDTO>>(await _ownerRepository.GetOwners());
              
             if (owners == null)
             {
@@ -37,12 +38,12 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpGet("{ownerId}")]
-        public IActionResult GetOwner(int ownerId) {
-           if(!_ownerRepository.OwnerExist(ownerId)) {
+        public async Task<ActionResult> GetOwner(int ownerId) {
+           if(!await _ownerRepository.OwnerExist(ownerId)) {
                 return NotFound(ownerId);
             }
 
-           var owner = _mapper.Map<OwnerDTO>(_ownerRepository.GetOwner(ownerId)); 
+           var owner = _mapper.Map<OwnerDTO>(await _ownerRepository.GetOwner(ownerId)); 
 
             if(owner == null) {
                 return BadRequest(owner);
@@ -53,14 +54,14 @@ namespace PokemonReviewApp.Controllers
         }
         [HttpGet("{ownerId}/pokemon")]
 
-        public IActionResult GetPokemonByOwner (int ownerId) {
-            if (!_ownerRepository.OwnerExist(ownerId))
+        public async Task<ActionResult> GetPokemonByOwner (int ownerId) {
+            if (!await _ownerRepository.OwnerExist(ownerId))
             {
                 return NotFound();
             }
 
             var owner = _mapper.Map<List<PokemonDTO>>(
-                _ownerRepository.GetPokemonByOwner(ownerId));
+                await _ownerRepository.GetPokemonByOwner(ownerId));
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -70,14 +71,14 @@ namespace PokemonReviewApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult PostOwner([FromBody] OwnerDTO ownerDTO, [FromQuery] int countryId) {
+        public async Task<ActionResult> PostOwner([FromBody] OwnerDTO ownerDTO, [FromQuery] int countryId) {
             if (ownerDTO == null)
             {
                 return BadRequest(ModelState);
             }
-            
+            var value = await _ownerRepository.GetOwners();
 
-            var owner = _ownerRepository.GetOwners().Where(e => e.FirstName.Trim().ToUpper() == ownerDTO.FirstName.Trim().ToUpper()).FirstOrDefault();
+            var owner = value.Where(e => e.FirstName.Trim().ToUpper() == ownerDTO.FirstName.Trim().ToUpper()).FirstOrDefault();
 
             if(owner != null) {
                 ModelState.AddModelError("", "Category already exists");
@@ -85,15 +86,59 @@ namespace PokemonReviewApp.Controllers
             }
 
             var ownerMap = _mapper.Map<Owner>(ownerDTO);
-            ownerMap.Country = _countryRepository.GetCountry(countryId);
-             
-
-            if (!_ownerRepository.CreateOwner(ownerMap))
+            ownerMap.Country = await _countryRepository.GetCountry(countryId);
+            if (! await _ownerRepository.CreateOwner(ownerMap))
             {
                 ModelState.AddModelError("", "Something was wrong when saving");
                 return StatusCode(500, ModelState);
             }
             return Ok("Successfully created");
+        }
+
+        [HttpPut("{ownerId}")]
+        public async Task<ActionResult> UpdateOwner(int ownerId, OwnerDTO ownerDTO) {
+            if (ownerDTO == null)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if(ownerId != ownerDTO.Id) {
+                return BadRequest(ModelState);
+            }
+
+            if(!await _ownerRepository.OwnerExist(ownerId)) {
+                return NotFound();
+            }
+
+            var ownerMap = _mapper.Map<Owner>(ownerDTO);
+            if(!await _ownerRepository.UpdateOwner(ownerMap))
+            {
+                ModelState.AddModelError("", "Something was wrong");
+                return StatusCode(500, ModelState);
+            }
+            return NoContent();
+        }
+
+        [HttpDelete("{ownerId}")]
+        public async Task<ActionResult> DeleteOwner(int ownerId) {
+            if (!await _ownerRepository.OwnerExist(ownerId))
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var ownerDelete = await _ownerRepository.GetOwner(ownerId);
+
+            if (!await _ownerRepository.DeleteOwner(ownerDelete))
+            {
+                ModelState.AddModelError("", "Something was wrong when deleteing");
+            }
+
+            return NoContent();
 
         }
     }

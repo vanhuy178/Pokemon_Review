@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using PokemonReviewApp.Data;
 using PokemonReviewApp.Interface;
 using PokemonReviewApp.Models;
@@ -15,24 +16,46 @@ namespace PokemonReviewApp.Repository
             _mapper = mapper;
         }
 
-        public Reviewer GetReviewer(int reviewerId)
+        public Task<bool> CreateReviewer(Reviewer reviewer)
         {
-            return _dataContext.Reviewers.Where(r => r.Id == reviewerId).FirstOrDefault();
+            _dataContext.Add(reviewer);
+            return Save();
         }
 
-        public ICollection<Reviewer> GetReviewers()
+        public async Task<Reviewer> GetReviewer(int reviewerId)
         {
-            return _dataContext.Reviewers.ToList();
+            return await _dataContext.Reviewers.Where(r => r.Id == reviewerId).FirstOrDefaultAsync();
+        }
+
+        public async Task<ICollection<Reviewer>> GetReviewers()
+        {
+            return await _dataContext.Reviewers.ToListAsync();
         } 
 
-        public ICollection<Review> GetReviewsByReviewer(int reviewerId)
+        public async Task<ICollection<Review>> GetReviewsByReviewer(int reviewerId)
         {
             return _dataContext.Reviews.Where(re => re.Reviewer.Id == reviewerId).ToList();    
         }
 
-        public bool ReviewerExists(int id)
+        public async Task<bool> ReviewerExists(int id)
         {
-            return _dataContext.Reviewers.Any(r => r.Id == id); 
+            return await _dataContext.Reviewers.AnyAsync(r => r.Id == id); 
+        }
+
+        public async Task<bool> UpdateReviewer(Reviewer reviewer)
+        {
+            _dataContext.Update(reviewer);
+            return await Save();
+        }
+
+        public async Task<bool> DeleteReviewer(Reviewer reviewer) {
+            _dataContext.Remove(reviewer);
+            return await Save();  
+        }
+        public async Task<bool> Save()
+        {
+            var saved = await _dataContext.SaveChangesAsync();
+            return saved > 0 ? true : false;
         }
     }
 }

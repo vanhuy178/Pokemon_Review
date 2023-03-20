@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PokemonReviewApp.Data;
 using PokemonReviewApp.Interface;
@@ -14,25 +15,52 @@ namespace PokemonReviewApp.Repository
         public ReviewRepository(DataContext dataContext, IMapper mapper) { 
             _dataContext = dataContext;
             _mapper = mapper;
-        }   
-        public Review GetReview(int reviewId)
-        {
-            return _dataContext.Reviews.Where(r => r.Id == reviewId).FirstOrDefault();
         }
 
-        public ICollection<Review> GetReviewOfPokemon(int pokeId)
+        public async Task<bool> CreateReview(Review review)
         {
-             return _dataContext.Reviews.Where(r => r.Id == pokeId).ToList();       
+            await _dataContext.AddAsync(review);
+            return await Save();
         }
 
-        public ICollection<Review> GetReviews()
+        public async Task<bool> DeleteReview(Review review)
         {
-            return _dataContext.Reviews.ToList();
+            _dataContext?.Remove(review);
+            return await Save();
         }
 
-        public bool ReviewExist(int reviewId)
+        public async Task<Review> GetReview(int reviewId)
         {
-            return _dataContext.Reviews.Any(r => r.Id == reviewId); 
+            return await _dataContext.Reviews.Where(r => r.Id == reviewId).FirstOrDefaultAsync();
+        }
+
+        public async Task<ICollection<Review>> GetReviewOfPokemon(int pokeId)
+        {
+             return await _dataContext.Reviews.Where(r => r.Id == pokeId).ToListAsync();       
+        }
+
+        public async Task<ICollection<Review>> GetReviews()
+        {
+            return await _dataContext.Reviews.ToListAsync();
+        }
+
+        public async Task<bool> ReviewExist(int reviewId)
+        {
+            return await _dataContext.Reviews.AnyAsync(r => r.Id == reviewId); 
+        }
+
+        public async Task<bool> Save()
+        {
+            var saved = await _dataContext.SaveChangesAsync();
+            return  saved > 0 ? true : false;
+        }
+        
+
+
+        public async Task<bool> UpdateReview(Review review)
+        {
+            _dataContext.Update(review);
+            return await Save();
         }
     }
 }

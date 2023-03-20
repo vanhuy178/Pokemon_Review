@@ -1,4 +1,5 @@
-﻿using PokemonReviewApp.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PokemonReviewApp.Data;
 using PokemonReviewApp.Interface;
 using PokemonReviewApp.Models;
 
@@ -11,39 +12,54 @@ namespace PokemonReviewApp.Repository
         public CategoryRepository(DataContext context) {
             _context = context;
         }
-        public bool CategoryExist(int id)
+        public async Task<bool> CategoryExist(int id)
         {
-            return _context.Categories.Any(item => item.Id == id);
+            return await _context.Categories.AnyAsync(item => item.Id == id);
         }
 
-        public bool CreateCategory(Category category)
+        public async Task<bool> CreateCategory(Category category)
         {
-            _context.Add(category);
-            return Save();
+            await _context.AddAsync(category);
+            return await Save();
         }
 
-        public ICollection<Category> GetCategories()
+        public async Task<bool> DeleteCategory(Category category)
         {
-            return _context.Categories.OrderBy(c => c.Id).ToList();    
+            _context.Remove(category);  
+            return await Save();  
         }
 
-        public Category GetCategory(int id)
+        public async Task<ICollection<Category>> GetCategories()
         {
-            return _context.Categories.Where(e => e.Id == id).FirstOrDefault();
+            return await _context.Categories.OrderBy(c => c.Id).ToListAsync();    
         }
 
-        public ICollection<Pokemon> GetPokemonByCategories(int categoryId)
+        public async Task<Category> GetCategory(int id)
         {
-           return _context.PokemonCategories.Where(e => e.CategoryId  == categoryId).Select(e =>e.Pokemon).ToList();
+            return await _context.Categories.Where(e => e.Id == id).FirstOrDefaultAsync();
         }
 
-        public bool Save()
+        public async Task<ICollection<Pokemon>> GetPokemonByCategories(int categoryId)
         {
-            var saved = _context.SaveChanges(); 
+           return await _context.PokemonCategories.Where(e => e.CategoryId  == categoryId).Select(e =>e.Pokemon).ToListAsync();
+        }
+
+        public async Task<bool> Save()
+        {
+            var saved = await _context.SaveChangesAsync();
 
             return saved > 0 ? true : false;
+           
 
         }
+
+        public async Task<bool> UpdateCategory(Category category)
+        {
+            _context.Update(category);  
+            return await Save();  
+        }
+
+
     }
 }
     
